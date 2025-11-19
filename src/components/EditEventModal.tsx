@@ -36,7 +36,7 @@ function EditEventModal({ isOpen, onClose, eventID }: EditEventModalProps) {
         setDate(data.date || "");
         setStartTime(data.start_time || "");
         setEndTime(data.end_time || "");
-        setTags(data.tags.join(", ") || "");
+        setTags(data.tags ? data.tags.join(", ") : "");
         setCapacity(data.max_capacity || "");
       }
     };
