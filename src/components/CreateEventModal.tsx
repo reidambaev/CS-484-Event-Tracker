@@ -107,8 +107,6 @@ function CreateEventModal({
             max_capacity: parseInt(formData.max_capacity),
             attendee_count: 0,
             created_by: user.id,
-            lat: 41.8707,
-            lng: -87.648,
           },
         ])
         .select()
@@ -186,8 +184,8 @@ function CreateEventModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl my-4">
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-8 rounded-t-2xl">
           <h2 className="text-3xl font-bold mb-2">Create New Event</h2>
           <p className="text-purple-100 text-sm">
@@ -261,7 +259,7 @@ function CreateEventModal({
 
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
-                Time
+                Start Time
               </label>
               <input
                 type="time"
@@ -280,46 +278,25 @@ function CreateEventModal({
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Location
-            </label>
-            <input
-              type="text"
-              placeholder="Library 3rd Floor, Room 301"
-              value={formData.room}
-              onChange={(e) =>
-                setFormData({ ...formData, room: e.target.value })
-              }
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                errors.room ? "border-red-500" : "border-gray-200"
-              }`}
-            />
-            {errors.room && (
-              <p className="text-red-500 text-sm mt-1">{errors.room}</p>
-            )}
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">
-                Tags
+                End Time
               </label>
-              <div className="relative">
-                <Tag
-                  className="absolute left-3 top-3 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="CS101, Study Session"
-                  value={formData.tags}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tags: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
+              <input
+                type="time"
+                placeholder="--:--"
+                value={formData.end_time}
+                onChange={(e) =>
+                  setFormData({ ...formData, end_time: e.target.value })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  errors.end_time ? "border-red-500" : "border-gray-200"
+                }`}
+              />
+              {errors.end_time && (
+                <p className="text-red-500 text-sm mt-1">{errors.end_time}</p>
+              )}
             </div>
 
             <div>
@@ -348,6 +325,66 @@ function CreateEventModal({
                   {errors.max_capacity}
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Building
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Library, Student Center"
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  errors.location ? "border-red-500" : "border-gray-200"
+                }`}
+              />
+              {errors.location && (
+                <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Room
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 301, 3rd Floor"
+                value={formData.room}
+                onChange={(e) =>
+                  setFormData({ ...formData, room: e.target.value })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  errors.room ? "border-red-500" : "border-gray-200"
+                }`}
+              />
+              {errors.room && (
+                <p className="text-red-500 text-sm mt-1">{errors.room}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Tags
+            </label>
+            <div className="relative">
+              <Tag className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="CS101, Study Session"
+                value={formData.tags}
+                onChange={(e) =>
+                  setFormData({ ...formData, tags: e.target.value })
+                }
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
             </div>
           </div>
 
