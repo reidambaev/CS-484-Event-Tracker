@@ -2,9 +2,10 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import supabase from "./utils/supabase";
 import Home from "./pages/Home";
-import Login from "./Login";
+import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -57,6 +58,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </BrowserRouter>

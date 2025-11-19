@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import supabase from "./utils/supabase";
+import supabase from "../utils/supabase";
 
 function Login() {
   const [loading, setLoading] = useState(false);
