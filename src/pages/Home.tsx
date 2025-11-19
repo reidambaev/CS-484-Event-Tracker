@@ -12,13 +12,53 @@ function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [userRSVPs, setUserRSVPs] = useState<string[]>([]);
 
-  const userRSVPs: string[] = [];
+  // Auth Listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserRSVPs(session.user.id);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserRSVPs(session.user.id);
+      } else {
+        setUserRSVPs([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Fetch events from Supabase
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  // Fetch user's RSVPs
+  const fetchUserRSVPs = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_events")
+        .select("event_id")
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      const eventIds = data.map((item: any) => item.event_id);
+      setUserRSVPs(eventIds);
+    } catch (error) {
+      console.error("Error fetching user RSVPs:", error);
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -82,8 +122,65 @@ function Home() {
     console.log("Selected event:", event);
   };
 
-  const handleRSVP = (id: string) => {
-    console.log("RSVP to event:", id);
+  // RSVP Logic
+  const handleRSVP = async (eventId: string) => {
+    if (!user) {
+      alert("Please log in to RSVP");
+      return;
+    }
+
+    try {
+      // Check if user has already RSVP'd
+      const { data: existingRSVP, error: checkError } = await supabase
+        .from("user_events")
+        .select("*")
+        .eq("event_id", eventId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        // PGRST116 means no rows found, which is fine
+        throw checkError;
+      }
+
+      if (existingRSVP) {
+        // Remove RSVP
+        const { error: deleteError } = await supabase
+          .from("user_events")
+          .delete()
+          .eq("event_id", eventId)
+          .eq("user_id", user.id);
+
+        if (deleteError) throw deleteError;
+
+        // Update local state
+        setUserRSVPs((prev) => prev.filter((id) => id !== eventId));
+        alert("RSVP removed!");
+      } else {
+        // Add RSVP
+        const { error: insertError } = await supabase
+          .from("user_events")
+          .insert([
+            {
+              event_id: eventId,
+              user_id: user.id,
+              status: "attending",
+            },
+          ]);
+
+        if (insertError) throw insertError;
+
+        // Update local state
+        setUserRSVPs((prev) => [...prev, eventId]);
+        alert("RSVP confirmed!");
+      }
+
+      // Refresh events to update attendee counts
+      fetchEvents();
+    } catch (error) {
+      console.error("Error handling RSVP:", error);
+      alert(error instanceof Error ? error.message : "Failed to update RSVP");
+    }
   };
 
   const handleTestSubmit = async () => {
