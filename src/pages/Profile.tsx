@@ -8,6 +8,26 @@ function Profile() {
   const [events, setEvents] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [edit, setEdit] = useState<any>(null);
+  const [rvsp, setRvsp] = useState<any[]>([]);
+
+  const fetchRvsp = useCallback(async (userID: string | null) => {
+    if (!userID) return;
+    const { data, error } = await supabase
+      .from("user_events")
+      .select(
+        `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`,
+      )
+      .eq("user_id", userID);
+    if (error) {
+      console.log(error);
+      return "error fetching";
+    } else if (data) {
+      console.log(data);
+      setRvsp(data);
+    } else {
+      return "no rsvp events";
+    }
+  }, []);
 
   const fetchEvents = useCallback(async (userID: string | null) => {
     if (!userID) return;
@@ -33,10 +53,27 @@ function Profile() {
     }
   };
 
+  const handleUserEventStatus = async (
+    userEventID: any,
+    attendinng: boolean,
+  ) => {
+    const { error } = await supabase
+      .from("user_events")
+      .update([{ status: attendinng ? "attending" : null }])
+      .eq("id", userEventID);
+    if (error) {
+      console.log(error);
+      alert(`failed to change event status ${error}`);
+    } else {
+      fetchRvsp(user?.id);
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
       fetchEvents(data.user ? data.user.id : null);
+      fetchRvsp(data.user ? data.user.id : null);
     });
   }, []);
 
@@ -80,6 +117,41 @@ function Profile() {
         ))}
       </ul>
       <h1 className="text-2xl mb-4 mt-4">Events Tracked by Me</h1>
+      <ul>
+        {rvsp.map((event: any) => (
+          <li key={event.id}>
+            <p className="px-1 py-1">
+              {event.events.title} - {event.events.date} -{" "}
+              {event.events.location} - {event.events.start_time} -{" "}
+              {event.events.end_time} - {event.events.max_capacity} -{" "}
+              {event.events.attendee_count} -
+              {event.events.tags ? event.events.tags.join(", ") : ""}
+              {(() => {
+                const text =
+                  event.status == "attending" ? "Going" : "Not Going";
+                const buttonStyle =
+                  event.status == "attending"
+                    ? "px-1 py-1 mr-1 bg-green-500 text-white rounded"
+                    : "px-1 py-1 mr-1 bg-red-500 text-white rounded";
+                return (
+                  <button
+                    className={buttonStyle}
+                    onClick={() => {
+                      handleUserEventStatus(
+                        event.id,
+                        event.status == "attending" ? false : true,
+                      );
+                      console.log("handling");
+                    }}
+                  >
+                    {text}
+                  </button>
+                );
+              })()}
+            </p>
+          </li>
+        ))}
+      </ul>
       <Link to="/" className="text-blue-500 underline mt-4 block">
         Back to Home
       </Link>
