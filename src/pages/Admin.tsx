@@ -44,7 +44,14 @@ function Admin() {
             <p className="px-1 py-1">
               {event.title} - {event.date} - {event.location} -{" "}
               {event.start_time} - {event.end_time} - {event.max_capacity} -{" "}
-              {event.attendee_count} - {event.tags.join(", ")}{" "}
+              {event.attendee_count} -{" "}
+              {() => {
+                if (event.tags) {
+                  return event.tags.join(", ");
+                } else {
+                  return "";
+                }
+              }}{" "}
               <button
                 className="px-1 py-1 mr-1 bg-blue-500 text-white rounded"
                 onClick={() => {
