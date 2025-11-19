@@ -41,6 +41,17 @@ function Home() {
 
       if (eventsError) throw eventsError;
 
+      // Fetch all tags from the tags table
+      const { data: tagsData, error: tagsError } = await supabase
+        .from("tags")
+        .select("name");
+
+      if (tagsError) throw tagsError;
+
+      // Set all available tags from the tags table
+      const allTagNames = tagsData.map((tag: any) => tag.name);
+      setAllTags(allTagNames);
+
       // Transform the data to match the Event interface
       const transformedEvents: Event[] = eventsData.map((event: any) => ({
         id: event.id,
@@ -60,12 +71,6 @@ function Home() {
       }));
 
       setEvents(transformedEvents);
-
-      // Extract all unique tags
-      const uniqueTags = Array.from(
-        new Set(transformedEvents.flatMap((event) => event.tags))
-      );
-      setAllTags(uniqueTags);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -210,6 +215,7 @@ function Home() {
         <CreateEventModal
           isOpen={showCreateEventModal}
           onClose={() => setShowCreateEventModal(false)}
+          onSuccess={fetchEvents}
         />
       </div>
     </div>

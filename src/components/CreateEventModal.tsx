@@ -1,68 +1,80 @@
 import { useState } from "react";
+import { X, MapPin, Tag, Users, Calendar } from "lucide-react";
 import supabase from "../utils/supabase";
 
 interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [room, setRoom] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [tags, setTags] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+function CreateEventModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: CreateEventModalProps) {
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    location: "",
+    room: "",
+    date: "",
+    start_time: "",
+    end_time: "",
+    tags: "",
+    max_capacity: "50",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) {
+    if (!formData.title.trim()) {
       newErrors.title = "Title is required";
     }
 
-    if (!description.trim()) {
+    if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
 
-    if (!location.trim()) {
+    if (!formData.location.trim()) {
       newErrors.location = "Location is required";
     }
 
-    if (!room.trim()) {
+    if (!formData.room.trim()) {
       newErrors.room = "Room is required";
     }
 
-    if (!date) {
+    if (!formData.date) {
       newErrors.date = "Date is required";
     }
 
-    if (!startTime) {
-      newErrors.startTime = "Start time is required";
+    if (!formData.start_time) {
+      newErrors.start_time = "Start time is required";
     }
 
-    if (!endTime) {
-      newErrors.endTime = "End time is required";
+    if (!formData.end_time) {
+      newErrors.end_time = "End time is required";
     }
 
-    if (startTime && endTime && startTime >= endTime) {
-      newErrors.endTime = "End time must be after start time";
+    if (
+      formData.start_time &&
+      formData.end_time &&
+      formData.start_time >= formData.end_time
+    ) {
+      newErrors.end_time = "End time must be after start time";
     }
 
-    if (!capacity || parseInt(capacity) <= 0) {
-      newErrors.capacity = "Capacity must be greater than 0";
+    if (!formData.max_capacity || parseInt(formData.max_capacity) <= 0) {
+      newErrors.max_capacity = "Capacity must be greater than 0";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCreateEvent = async () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
@@ -85,16 +97,18 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         .from("events")
         .insert([
           {
-            title,
-            description,
-            location,
-            room,
-            date,
-            start_time: startTime,
-            end_time: endTime,
-            max_capacity: parseInt(capacity),
+            title: formData.title,
+            description: formData.description,
+            location: formData.location,
+            room: formData.room,
+            date: formData.date,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            max_capacity: parseInt(formData.max_capacity),
             attendee_count: 0,
             created_by: user.id,
+            lat: 41.8707,
+            lng: -87.648,
           },
         ])
         .select()
@@ -103,8 +117,8 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
       if (eventError) throw eventError;
 
       // Handle tags if provided
-      if (tags.trim()) {
-        const tagNames = tags
+      if (formData.tags.trim()) {
+        const tagNames = formData.tags
           .split(",")
           .map((tag) => tag.trim())
           .filter(Boolean);
@@ -147,18 +161,19 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         }
       }
 
-      console.log("Event created:", eventData);
-      alert("Event created successfully!");
+      if (onSuccess) onSuccess();
       onClose();
-      setTitle("");
-      setDescription("");
-      setLocation("");
-      setRoom("");
-      setDate("");
-      setStartTime("");
-      setEndTime("");
-      setTags("");
-      setCapacity("");
+      setFormData({
+        title: "",
+        description: "",
+        location: "",
+        room: "",
+        date: "",
+        start_time: "",
+        end_time: "",
+        tags: "",
+        max_capacity: "50",
+      });
       setErrors({});
     } catch (error) {
       console.error("Error creating event:", error);
@@ -171,155 +186,187 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded w-96 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl mb-4">Create Event</h2>
-
-        <div className="mb-3">
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.title ? "border-red-500" : ""
-            }`}
-          />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title}</p>
-          )}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-8 rounded-t-2xl">
+          <h2 className="text-3xl font-bold mb-2">Create New Event</h2>
+          <p className="text-purple-100 text-sm">
+            Share your event with the campus community
+          </p>
         </div>
 
-        <div className="mb-3">
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.description ? "border-red-500" : ""
-            }`}
-            rows={3}
-          />
-          {errors.description && (
-            <p className="text-red-500 text-sm mt-1">{errors.description}</p>
-          )}
-        </div>
+        <div className="p-8 space-y-5">
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Event Title
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., CS101 Midterm Study Session"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                errors.title ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.title && (
+              <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <input
-            type="text"
-            placeholder="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.location ? "border-red-500" : ""
-            }`}
-          />
-          {errors.location && (
-            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-          )}
-        </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Description
+            </label>
+            <textarea
+              placeholder=""
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                errors.description ? "border-red-500" : "border-gray-200"
+              }`}
+              rows={4}
+            />
+            {errors.description && (
+              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <input
-            type="text"
-            placeholder="Room"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.location ? "border-red-500" : ""
-            }`}
-          />
-          {errors.room && (
-            <p className="text-red-500 text-sm mt-1">{errors.room}</p>
-          )}
-        </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Date
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  placeholder="mm/dd/yyyy"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    errors.date ? "border-red-500" : "border-gray-200"
+                  }`}
+                />
+              </div>
+              {errors.date && (
+                <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+              )}
+            </div>
 
-        <div className="mb-3">
-          <input
-            type="date"
-            placeholder="Date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.date ? "border-red-500" : ""
-            }`}
-          />
-          {errors.date && (
-            <p className="text-red-500 text-sm mt-1">{errors.date}</p>
-          )}
-        </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Time
+              </label>
+              <input
+                type="time"
+                placeholder="--:--"
+                value={formData.start_time}
+                onChange={(e) =>
+                  setFormData({ ...formData, start_time: e.target.value })
+                }
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  errors.start_time ? "border-red-500" : "border-gray-200"
+                }`}
+              />
+              {errors.start_time && (
+                <p className="text-red-500 text-sm mt-1">{errors.start_time}</p>
+              )}
+            </div>
+          </div>
 
-        <div className="mb-3">
-          <input
-            type="time"
-            placeholder="Start Time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.startTime ? "border-red-500" : ""
-            }`}
-          />
-          {errors.startTime && (
-            <p className="text-red-500 text-sm mt-1">{errors.startTime}</p>
-          )}
-        </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Location
+            </label>
+            <input
+              type="text"
+              placeholder="Library 3rd Floor, Room 301"
+              value={formData.room}
+              onChange={(e) =>
+                setFormData({ ...formData, room: e.target.value })
+              }
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                errors.room ? "border-red-500" : "border-gray-200"
+              }`}
+            />
+            {errors.room && (
+              <p className="text-red-500 text-sm mt-1">{errors.room}</p>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <input
-            type="time"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.endTime ? "border-red-500" : ""
-            }`}
-          />
-          {errors.endTime && (
-            <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>
-          )}
-        </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Tags
+              </label>
+              <div className="relative">
+                <Tag
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="CS101, Study Session"
+                  value={formData.tags}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tags: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
 
-        <div className="mb-3">
-          <input
-            type="text"
-            placeholder="Tags (comma separated)"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className="w-full p-2 border"
-          />
-        </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Max Capacity
+              </label>
+              <div className="relative">
+                <Users
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="number"
+                  placeholder="50"
+                  value={formData.max_capacity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, max_capacity: e.target.value })
+                  }
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    errors.max_capacity ? "border-red-500" : "border-gray-200"
+                  }`}
+                />
+              </div>
+              {errors.max_capacity && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.max_capacity}
+                </p>
+              )}
+            </div>
+          </div>
 
-        <div className="mb-3">
-          <input
-            type="number"
-            placeholder="Capacity"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.capacity ? "border-red-500" : ""
-            }`}
-          />
-          {errors.capacity && (
-            <p className="text-red-500 text-sm mt-1">{errors.capacity}</p>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={handleCreateEvent}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-          >
-            {loading ? "Creating..." : "Create"}
-          </button>
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Cancel
-          </button>
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-300 font-medium transition"
+            >
+              {loading ? "Creating..." : "Create Event"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
