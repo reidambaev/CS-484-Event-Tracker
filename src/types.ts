@@ -3,6 +3,7 @@ export interface Event {
   title: string;
   description: string;
   location: string;
+  room: string;
   lat?: number;
   lng?: number;
   date: string;

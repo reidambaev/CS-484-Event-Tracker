@@ -1,33 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateEventModal from "../components/CreateEventModal";
 import Sidebar from "../components/Sidebar";
 import supabase from "../utils/supabase";
+import type { Event } from "../types";
 
 function Home() {
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTag, setFilterTag] = useState("");
   const [view, setView] = useState<"map" | "list">("list");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data for now
-  const dummyEvents = [
-    {
-      id: "1",
-      title: "Tech Meetup",
-      description: "A gathering for tech enthusiasts",
-      location: "Downtown",
-      date: "2025-12-01",
-      start_time: "10:00:00",
-      end_time: "12:00:00",
-      tags: ["technology"],
-      attendees: 25,
-      max_capacity: 50,
-      created_by: "user-123",
-    },
-  ];
-
-  const allTags = ["technology", "workshop", "social"];
   const userRSVPs: string[] = [];
+
+  // Fetch events from Supabase
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch events with their tags
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("events")
+        .select(
+          `
+          *,
+          event_tags (
+            tags (
+              name
+            )
+          )
+        `
+        )
+        .order("date", { ascending: true });
+
+      if (eventsError) throw eventsError;
+
+      // Transform the data to match the Event interface
+      const transformedEvents: Event[] = eventsData.map((event: any) => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        location: event.location,
+        room: event.room || "",
+        lat: event.lat,
+        lng: event.lng,
+        date: event.date,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        tags: event.event_tags.map((et: any) => et.tags.name),
+        max_capacity: event.max_capacity,
+        attendees: event.attendee_count || 0,
+        created_by: event.created_by,
+      }));
+
+      setEvents(transformedEvents);
+
+      // Extract all unique tags
+      const uniqueTags = Array.from(
+        new Set(transformedEvents.flatMap((event) => event.tags))
+      );
+      setAllTags(uniqueTags);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectEvent = (event: any) => {
     console.log("Selected event:", event);
@@ -53,6 +97,7 @@ function Home() {
         title: "Test Event",
         description: "This is a test event",
         location: "Test Location",
+        room: "101",
         date: "2025-12-01",
         start_time: "10:00:00",
         end_time: "12:00:00",
@@ -104,6 +149,7 @@ function Home() {
 
       alert("Test event created successfully!");
       console.log("Created event:", eventResult);
+      fetchEvents(); // Refresh events after creating
     } catch (error) {
       console.error("Error:", error);
       alert(
@@ -111,6 +157,15 @@ function Home() {
       );
     }
   };
+
+  // Filter events based on search and tag
+  const filteredEvents = events.filter((event) => {
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTag = !filterTag || event.tags.includes(filterTag);
+    return matchesSearch && matchesTag;
+  });
 
   return (
     <div className="flex h-screen">
@@ -121,7 +176,7 @@ function Home() {
         setFilterTag={setFilterTag}
         view={view}
         setView={setView}
-        filteredEvents={dummyEvents}
+        filteredEvents={filteredEvents}
         allTags={allTags}
         onSelectEvent={handleSelectEvent}
         onRSVP={handleRSVP}
@@ -130,11 +185,15 @@ function Home() {
 
       <div className="flex-1 p-8 overflow-y-auto">
         <h1 className="text-3xl mb-4">Home</h1>
-        <p>Welcome to the event tracker</p>
+        {loading ? (
+          <p>Loading events...</p>
+        ) : (
+          <p>Welcome to the event tracker - {events.length} events loaded</p>
+        )}
 
         <div className="mt-4 flex gap-2">
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowCreateEventModal(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
             Create Event
@@ -149,8 +208,8 @@ function Home() {
         </div>
 
         <CreateEventModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+          isOpen={showCreateEventModal}
+          onClose={() => setShowCreateEventModal(false)}
         />
       </div>
     </div>

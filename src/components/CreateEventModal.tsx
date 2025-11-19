@@ -10,6 +10,7 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [room, setRoom] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -31,6 +32,10 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
 
     if (!location.trim()) {
       newErrors.location = "Location is required";
+    }
+
+    if (!room.trim()) {
+      newErrors.room = "Room is required";
     }
 
     if (!date) {
@@ -83,6 +88,7 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
             title,
             description,
             location,
+            room,
             date,
             start_time: startTime,
             end_time: endTime,
@@ -147,6 +153,7 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
       setTitle("");
       setDescription("");
       setLocation("");
+      setRoom("");
       setDate("");
       setStartTime("");
       setEndTime("");
@@ -210,6 +217,21 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
           />
           {errors.location && (
             <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder="Room"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className={`w-full p-2 border ${
+              errors.location ? "border-red-500" : ""
+            }`}
+          />
+          {errors.room && (
+            <p className="text-red-500 text-sm mt-1">{errors.room}</p>
           )}
         </div>
 
