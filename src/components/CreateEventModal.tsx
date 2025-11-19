@@ -18,19 +18,6 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const fillExampleData = () => {
-    setTitle("Tech Meetup 2025");
-    setDescription(
-      "Join us for an exciting evening of networking and tech talks!"
-    );
-    setLocation("Innovation Hub, Room 301");
-    setDate("2025-12-15");
-    setStartTime("18:00");
-    setEndTime("20:30");
-    setTags("tech, networking, innovation");
-    setCapacity("50");
-  };
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -88,27 +75,73 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         return;
       }
 
-      const { data, error } = await supabase.from("events").insert([
-        {
-          title,
-          description,
-          location,
-          date,
-          start_time: startTime,
-          end_time: endTime,
-          tags: tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-          max_capacity: parseInt(capacity),
-          attendee_count: 0,
-          created_by: user.id,
-        },
-      ]);
+      // Insert the event
+      const { data: eventData, error: eventError } = await supabase
+        .from("events")
+        .insert([
+          {
+            title,
+            description,
+            location,
+            date,
+            start_time: startTime,
+            end_time: endTime,
+            max_capacity: parseInt(capacity),
+            attendee_count: 0,
+            created_by: user.id,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (eventError) throw eventError;
 
-      console.log("Event created:", data);
+      // Handle tags if provided
+      if (tags.trim()) {
+        const tagNames = tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean);
+
+        for (const tagName of tagNames) {
+          // Check if tag exists
+          let { data: existingTag, error: tagFetchError } = await supabase
+            .from("tags")
+            .select("id")
+            .eq("name", tagName)
+            .single();
+
+          let tagId;
+
+          if (tagFetchError || !existingTag) {
+            // Create new tag
+            const { data: newTag, error: tagCreateError } = await supabase
+              .from("tags")
+              .insert([{ name: tagName }])
+              .select()
+              .single();
+
+            if (tagCreateError) throw tagCreateError;
+            tagId = newTag.id;
+          } else {
+            tagId = existingTag.id;
+          }
+
+          // Create event_tag relationship
+          const { error: eventTagError } = await supabase
+            .from("event_tags")
+            .insert([
+              {
+                event_id: eventData.id,
+                tag_id: tagId,
+              },
+            ]);
+
+          if (eventTagError) throw eventTagError;
+        }
+      }
+
+      console.log("Event created:", eventData);
       alert("Event created successfully!");
       onClose();
       setTitle("");
@@ -133,15 +166,7 @@ function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded w-96 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl">Create Event</h2>
-          <button
-            onClick={fillExampleData}
-            className="text-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-          >
-            Fill Example
-          </button>
-        </div>
+        <h2 className="text-2xl mb-4">Create Event</h2>
 
         <div className="mb-3">
           <input
