@@ -3,6 +3,7 @@ import CreateEventModal from "../components/CreateEventModal";
 import Sidebar from "../components/Sidebar";
 import supabase from "../utils/supabase";
 import type { Event } from "../types";
+import { useLoadScript, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 
 function Home() {
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
@@ -14,6 +15,12 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [userRSVPs, setUserRSVPs] = useState<string[]>([]);
+  const [clickedEvent, setClickedEvent] = useState<Event | null>(null);
+  const [filtered, setFiltered] = useState<Event[]>([])
+
+  const {isLoaded} = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_KEY
+  });
 
   // Auth Listener
   useEffect(() => {
@@ -111,6 +118,12 @@ function Home() {
       }));
 
       setEvents(transformedEvents);
+
+      const filtered = transformedEvents.filter(
+          (e) => e.lat !== null && e.lng !== null
+        );
+        setFiltered(filtered);
+
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -203,6 +216,8 @@ function Home() {
         date: "2025-12-01",
         start_time: "10:00:00",
         end_time: "12:00:00",
+        lat: 41.872219,
+        lng: -87.649204,
         max_capacity: 50,
         attendee_count: 0,
         created_by: user.id,
@@ -269,6 +284,29 @@ function Home() {
     return matchesSearch && matchesTag;
   });
 
+   //when a user clicks on a marker, sets the event for info window
+  const handleMarkerClick = (event: Event) => {setClickedEvent(event)}
+
+  //calculates how many spots are left for the clicked event
+  // const spotsLeft = clickedEvent && (clickedEvent.max_capacity)
+
+  //make the window popup for when an event is clicked (Needs work)
+  const infoWindow = clickedEvent && (<InfoWindow
+    onCloseClick={() => setClickedEvent(null)}
+    position= {{lat: clickedEvent.lat!, lng: clickedEvent.lng!}}
+    >
+      <div className="p-4">
+        <h4 className="text-sm text-center">{clickedEvent.title}</h4>
+        <p className="text-sm">Date: {clickedEvent.date}</p>
+        <p className="text-sm">Time: {clickedEvent.start_time} - {clickedEvent.end_time}</p>
+        {/* <p className="text-sm">Spots left: {spotsLeft} </p> */}
+        <p className="text-sm">About: {clickedEvent.description}</p>
+      </div>
+    </InfoWindow>
+  )
+
+  if (!isLoaded) return <p>Loading...</p>;
+
   return (
     <div className="flex h-screen">
       <Sidebar
@@ -308,7 +346,23 @@ function Home() {
             Test Submit
           </button>
         </div>
-
+        <div className="w-full h-screen">
+      <GoogleMap
+        mapContainerStyle={{ width: "100%", height: "500px" }}
+        center={{ lat: 41.872219, lng: -87.649204 }}
+        zoom={17}
+      >
+        {filtered.map((event) => (
+          <Marker
+            key={event.id}
+            position={{ lat: event.lat!, lng: event.lng! }}
+            onClick={() => handleMarkerClick(event)}
+          />
+        ))}
+        {infoWindow}
+      </GoogleMap>
+    </div>
+    
         <CreateEventModal
           isOpen={showCreateEventModal}
           onClose={() => setShowCreateEventModal(false)}
