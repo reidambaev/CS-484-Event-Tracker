@@ -12,7 +12,7 @@ function Admin() {
     const { data, error } = await supabase
       .from("events")
       .select("*")
-      .order("date", { ascending: true });
+      .order("date", { ascending: false });
     if (error) {
       console.log(error);
     } else {
@@ -44,14 +44,7 @@ function Admin() {
             <p className="px-1 py-1">
               {event.title} - {event.date} - {event.location} -{" "}
               {event.start_time} - {event.end_time} - {event.max_capacity} -{" "}
-              {event.attendee_count} -{" "}
-              {() => {
-                if (event.tags) {
-                  return event.tags.join(", ");
-                } else {
-                  return "";
-                }
-              }}{" "}
+              {event.attendee_count} - {event.tags ? event.tags.join(", ") : ""}{" "}
               <button
                 className="px-1 py-1 mr-1 bg-blue-500 text-white rounded"
                 onClick={() => {
