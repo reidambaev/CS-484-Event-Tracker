@@ -3,11 +3,13 @@ import CreateEventModal from "../components/CreateEventModal";
 import Sidebar from "../components/Sidebar";
 import supabase from "../utils/supabase";
 import type { Event } from "../types";
+
 import {
   useLoadScript,
   GoogleMap,
   Marker,
   InfoWindow,
+  MarkerClusterer,
 } from "@react-google-maps/api";
 
 function Home() {
@@ -293,9 +295,6 @@ function Home() {
     setClickedEvent(event);
   };
 
-  //calculates how many spots are left for the clicked event
-  // const spotsLeft = clickedEvent && (clickedEvent.max_capacity)
-
   //make the window popup for when an event is clicked (Needs work)
   const infoWindow = clickedEvent && (
     <InfoWindow
@@ -308,7 +307,6 @@ function Home() {
         <p className="text-sm">
           Time: {clickedEvent.start_time} - {clickedEvent.end_time}
         </p>
-        {/* <p className="text-sm">Spots left: {spotsLeft} </p> */}
         <p className="text-sm">About: {clickedEvent.description}</p>
       </div>
     </InfoWindow>
@@ -361,13 +359,20 @@ function Home() {
             center={{ lat: 41.872219, lng: -87.649204 }}
             zoom={17}
           >
-            {filtered.map((event) => (
-              <Marker
-                key={event.id}
-                position={{ lat: event.lat!, lng: event.lng! }}
-                onClick={() => handleMarkerClick(event)}
-              />
-            ))}
+            <MarkerClusterer>
+              {(clusterer) => (
+                <> 
+                  {filtered.map((event) => (
+                    <Marker
+                      key={event.id}
+                      position={{ lat: event.lat!, lng: event.lng! }}
+                      onClick={() => handleMarkerClick(event)}
+                      clusterer={clusterer} 
+                    />
+                  ))}
+                </>
+              )}
+            </MarkerClusterer>
             {infoWindow}
           </GoogleMap>
         </div>
