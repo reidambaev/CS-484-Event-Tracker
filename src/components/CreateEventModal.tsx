@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, MapPin, Tag, Users, Calendar } from "lucide-react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import supabase from "../utils/supabase";
 
 interface CreateEventModalProps {
@@ -24,6 +25,8 @@ function CreateEventModal({
     end_time: "",
     tags: "",
     max_capacity: "50",
+    lat: 41.8707,
+    lng: -87.648,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -107,6 +110,8 @@ function CreateEventModal({
             max_capacity: parseInt(formData.max_capacity),
             attendee_count: 0,
             created_by: user.id,
+            latitude: formData.lat,
+            longitude: formData.lng,
           },
         ])
         .select()
@@ -171,6 +176,8 @@ function CreateEventModal({
         end_time: "",
         tags: "",
         max_capacity: "50",
+        lat: 41.8707,
+        lng: -87.648,
       });
       setErrors({});
     } catch (error) {
@@ -185,7 +192,7 @@ function CreateEventModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl my-4">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl my-4">
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-8 rounded-t-2xl">
           <h2 className="text-3xl font-bold mb-2">Create New Event</h2>
           <p className="text-purple-100 text-sm">
@@ -368,6 +375,41 @@ function CreateEventModal({
                 <p className="text-red-500 text-sm mt-1">{errors.room}</p>
               )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              <MapPin className="inline mr-2" size={16} />
+              Pick Location on Map
+            </label>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <LoadScript
+                googleMapsApiKey={
+                  import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
+                }
+              >
+                <GoogleMap
+                  mapContainerStyle={{ width: "100%", height: "300px" }}
+                  center={{ lat: formData.lat, lng: formData.lng }}
+                  zoom={15}
+                  onClick={(e) => {
+                    if (e.latLng) {
+                      setFormData({
+                        ...formData,
+                        lat: e.latLng.lat(),
+                        lng: e.latLng.lng(),
+                      });
+                    }
+                  }}
+                >
+                  <Marker position={{ lat: formData.lat, lng: formData.lng }} />
+                </GoogleMap>
+              </LoadScript>
+            </div>
+            <p className="text-gray-500 text-xs mt-1">
+              Click on the map to set the event location (Lat:{" "}
+              {formData.lat.toFixed(4)}, Lng: {formData.lng.toFixed(4)})
+            </p>
           </div>
 
           <div>
