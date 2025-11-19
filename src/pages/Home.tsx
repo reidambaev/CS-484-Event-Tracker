@@ -24,6 +24,10 @@ function Home() {
   const [userRSVPs, setUserRSVPs] = useState<string[]>([]);
   const [clickedEvent, setClickedEvent] = useState<Event | null>(null);
   const [filtered, setFiltered] = useState<Event[]>([]);
+  const [centerMap, setCenterMap] = useState({
+    lat: 41.872219, 
+    lng: -87.649204,
+  });
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_KEY,
@@ -139,7 +143,13 @@ function Home() {
 
   const handleSelectEvent = (event: any) => {
     console.log("Selected event:", event);
+    setCenterMap({
+      lat: event.lat,
+      lng: event.lng,
+    });
   };
+
+
 
   // RSVP Logic
   const handleRSVP = async (eventId: string) => {
@@ -356,7 +366,7 @@ function Home() {
         <div className="w-full h-screen">
           <GoogleMap
             mapContainerStyle={{ width: "100%", height: "500px" }}
-            center={{ lat: 41.872219, lng: -87.649204 }}
+            center={centerMap}
             zoom={17}
           >
             <MarkerClusterer>
