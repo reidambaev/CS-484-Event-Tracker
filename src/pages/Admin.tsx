@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
 import supabase from "../utils/supabase";
 import { useEffect, useState } from "react";
+import EditEventModal from "../components/EditEventModal";
 
 function Admin() {
   const [events, setEvents] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [edit, setEdit] = useState<any>(null);
 
   const fetchEvents = async () => {
     const { data, error } = await supabase
@@ -43,6 +46,15 @@ function Admin() {
               {event.start_time} - {event.end_time} - {event.max_capacity} -{" "}
               {event.attendee_count} - {event.tags}{" "}
               <button
+                className="px-1 py-1 mr-1 bg-blue-500 text-white rounded"
+                onClick={() => {
+                  setShowModal(true);
+                  setEdit(event.id);
+                }}
+              >
+                Edit
+              </button>
+              <button
                 className="px-1 py-1 bg-red-600 text-white rounded"
                 onClick={() => handleDeleteEvent(event.id)}
               >
@@ -55,6 +67,15 @@ function Admin() {
       <Link to="/" className="text-blue-500 underline mt-4 block">
         Back to Home
       </Link>
+
+      <EditEventModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          fetchEvents();
+        }}
+        eventID={edit}
+      />
     </div>
   );
 }
