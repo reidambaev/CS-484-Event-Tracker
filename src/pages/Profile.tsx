@@ -17,7 +17,11 @@ function Profile() {
       .select(
         `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`,
       )
-      .eq("user_id", userID);
+      .eq("user_id", userID)
+      .order("status")
+      .order("events(date)", { ascending: false })
+      .order("events(start_time)")
+      .order("events(end_time)");
     if (error) {
       console.log(error);
       return "error fetching";
@@ -35,7 +39,9 @@ function Profile() {
       .from("events")
       .select("*")
       .eq("created_by", userID)
-      .order("date", { ascending: false });
+      .order("date", { ascending: false })
+      .order("start_time")
+      .order("end_time");
     if (error) {
       console.log(error);
     } else {

@@ -12,7 +12,9 @@ function Admin() {
     const { data, error } = await supabase
       .from("events")
       .select("*")
-      .order("date", { ascending: false });
+      .order("date", { ascending: false })
+      .order("start_time")
+      .order("end_time");
     if (error) {
       console.log(error);
     } else {
