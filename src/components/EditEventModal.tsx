@@ -124,7 +124,12 @@ function EditEventModal({ isOpen, onClose, eventID }: EditEventModalProps) {
         .eq("id", eventID)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating event:", error);
+        throw new Error(
+          `Failed to update event: ${error.message}. You may not have admin permissions.`
+        );
+      }
 
       console.log("Event edited:", data);
       alert("Event edited successfully!");

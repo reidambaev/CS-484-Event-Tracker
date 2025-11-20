@@ -26,8 +26,11 @@ function Admin() {
     const { error } = await supabase.from("events").delete().eq("id", eventID);
     if (error) {
       console.log(error);
-      alert(`failed to remove event: ${error}`);
+      alert(
+        `Failed to remove event: ${error.message}. You may not have admin permissions.`
+      );
     } else {
+      alert("Event deleted successfully!");
       fetchEvents();
     }
   };
