@@ -124,123 +124,187 @@ function Profile() {
   }, []);
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl mb-4">Profile</h1>
-      {user ? (
-        <div>
-          <p>Email: {user.email}</p>
-          <p className="mt-2">ID: {user.id}</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-8 py-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+          {user && (
+            <div className="mt-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{user.email}</p>
+                  <p className="text-sm text-gray-500">Member</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <p>Not logged in</p>
-      )}
-      <h1 className="text-2xl mb-4 mt-4">Created by Me</h1>
-      <ul className="space-y-2">
-        {events.map((event: any) => (
-          <li
-            key={event.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900">
-                  {event.title}
-                </h3>
-                <div className="mt-2 space-y-1 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Date:</span> {event.date}
-                  </p>
-                  <p>
-                    <span className="font-medium">Time:</span>{" "}
-                    {event.start_time} - {event.end_time}
-                  </p>
-                  <p>
-                    <span className="font-medium">Location:</span>{" "}
-                    {event.location}
-                  </p>
-                  <p>
-                    <span className="font-medium">Attendance:</span>{" "}
-                    {event.attendee_count} / {event.max_capacity}
-                  </p>
-                  {event.tags && event.tags.length > 0 && (
-                    <p>
-                      <span className="font-medium">Tags:</span>{" "}
-                      {event.tags.join(", ")}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                onClick={() => handleManageEvent(event)}
-              >
-                Manage
-              </button>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Created Events Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">My Events</h2>
+              <p className="text-gray-600 mt-1">Events you've created</p>
             </div>
-          </li>
-        ))}
-      </ul>
-      <h1 className="text-2xl mb-4 mt-4">Events Tracked by Me</h1>
-      <ul className="space-y-2">
-        {rvsp.map((event: any) => (
-          <li
-            key={event.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => handleViewTrackedEvent(event)}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900">
-                  {event.events.title}
-                </h3>
-                <div className="mt-2 space-y-1 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Date:</span>{" "}
-                    {event.events.date}
-                  </p>
-                  <p>
-                    <span className="font-medium">Time:</span>{" "}
-                    {event.events.start_time} - {event.events.end_time}
-                  </p>
-                  <p>
-                    <span className="font-medium">Location:</span>{" "}
-                    {event.events.location}
-                  </p>
-                  <p>
-                    <span className="font-medium">Attendance:</span>{" "}
-                    {event.events.attendee_count} / {event.events.max_capacity}
-                  </p>
-                  {event.events.tags && event.events.tags.length > 0 && (
-                    <p>
-                      <span className="font-medium">Tags:</span>{" "}
-                      {event.events.tags.join(", ")}
-                    </p>
-                  )}
-                </div>
+            <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
+              {events.length} {events.length === 1 ? "Event" : "Events"}
+            </span>
+          </div>
+          <ul className="space-y-3">
+            {events.length === 0 ? (
+              <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
+                <p className="text-gray-500">
+                  You haven't created any events yet.
+                </p>
               </div>
-              <button
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  event.status === "attending"
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUserEventStatus(
-                    event.id,
-                    event.status === "attending" ? false : true
-                  );
-                }}
-              >
-                {event.status === "attending" ? "Going" : "Not Going"}
-              </button>
+            ) : (
+              events.map((event: any) => (
+                <li
+                  key={event.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {event.title}
+                      </h3>
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Date:</span>{" "}
+                          {event.date}
+                        </p>
+                        <p>
+                          <span className="font-medium">Time:</span>{" "}
+                          {event.start_time} - {event.end_time}
+                        </p>
+                        <p>
+                          <span className="font-medium">Location:</span>{" "}
+                          {event.location}
+                        </p>
+                        <p>
+                          <span className="font-medium">Attendance:</span>{" "}
+                          {event.attendee_count} / {event.max_capacity}
+                        </p>
+                        {event.tags && event.tags.length > 0 && (
+                          <p>
+                            <span className="font-medium">Tags:</span>{" "}
+                            {event.tags.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+                      onClick={() => handleManageEvent(event)}
+                    >
+                      Manage
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+
+        {/* Tracked Events Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">My RSVPs</h2>
+              <p className="text-gray-600 mt-1">Events you're attending</p>
             </div>
-          </li>
-        ))}
-      </ul>
-      <Link to="/" className="text-blue-500 underline mt-4 block">
-        Back to Home
-      </Link>
+            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+              {rvsp.filter((e: any) => e.status === "attending").length}{" "}
+              Attending
+            </span>
+          </div>
+          <ul className="space-y-3">
+            {rvsp.length === 0 ? (
+              <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
+                <p className="text-gray-500">
+                  You haven't RSVP'd to any events yet.
+                </p>
+              </div>
+            ) : (
+              rvsp.map((event: any) => (
+                <li
+                  key={event.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleViewTrackedEvent(event)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {event.events.title}
+                      </h3>
+                      <div className="mt-2 space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Date:</span>{" "}
+                          {event.events.date}
+                        </p>
+                        <p>
+                          <span className="font-medium">Time:</span>{" "}
+                          {event.events.start_time} - {event.events.end_time}
+                        </p>
+                        <p>
+                          <span className="font-medium">Location:</span>{" "}
+                          {event.events.location}
+                        </p>
+                        <p>
+                          <span className="font-medium">Attendance:</span>{" "}
+                          {event.events.attendee_count} /{" "}
+                          {event.events.max_capacity}
+                        </p>
+                        {event.events.tags && event.events.tags.length > 0 && (
+                          <p>
+                            <span className="font-medium">Tags:</span>{" "}
+                            {event.events.tags.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                        event.status === "attending"
+                          ? "bg-green-100 text-green-700 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUserEventStatus(
+                          event.id,
+                          event.status === "attending" ? false : true
+                        );
+                      }}
+                    >
+                      {event.status === "attending" ? "✓ Going" : "Not Going"}
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+
+        {/* Back to Home Link */}
+        <div className="mt-8 text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium"
+          >
+            <span>←</span>
+            <span>Back to Home</span>
+          </Link>
+        </div>
+      </div>
 
       {/* Event Management Modal for Owned Events */}
       {showManagementModal && selectedEvent && (

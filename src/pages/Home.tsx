@@ -211,85 +211,6 @@ function Home() {
     }
   };
 
-  const handleTestSubmit = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        alert("You must be logged in");
-        return;
-      }
-
-      // Example event data
-      const eventData = {
-        title: "Test Event",
-        description: "This is a test event",
-        location: "Test Location",
-        room: "101",
-        date: "2025-12-01",
-        start_time: "10:00:00",
-        end_time: "12:00:00",
-        latitude: 41.872219,
-        longitude: -87.649204,
-        max_capacity: 50,
-        attendee_count: 0,
-        created_by: user.id,
-      };
-
-      const { data: eventResult, error: eventError } = await supabase
-        .from("events")
-        .insert([eventData])
-        .select()
-        .single();
-
-      if (eventError) throw eventError;
-
-      // Example tags
-      const tagNames = ["technology", "workshop"];
-
-      for (const tagName of tagNames) {
-        let { data: existingTag, error: tagFetchError } = await supabase
-          .from("tags")
-          .select("id")
-          .eq("name", tagName)
-          .single();
-
-        let tagId;
-
-        if (tagFetchError || !existingTag) {
-          const { data: newTag, error: tagCreateError } = await supabase
-            .from("tags")
-            .insert([{ name: tagName }])
-            .select()
-            .single();
-
-          if (tagCreateError) throw tagCreateError;
-          tagId = newTag.id;
-        } else {
-          tagId = existingTag.id;
-        }
-
-        await supabase.from("event_tags").insert([
-          {
-            event_id: eventResult.id,
-            tag_id: tagId,
-          },
-        ]);
-      }
-
-      alert("Test event created successfully!");
-      console.log("Created event:", eventResult);
-      fetchEvents(); // Refresh events after creating
-    } catch (error) {
-      console.error("Error:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to create test event"
-      );
-    }
-  };
-
   // Filter events based on search and tag
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
@@ -322,51 +243,53 @@ function Home() {
         userRSVPs={userRSVPs}
       />
 
-      <div className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-3xl mb-4">Home</h1>
-        {loading ? (
-          <p>Loading events...</p>
-        ) : (
-          <p>Welcome to the event tracker - {events.length} events loaded</p>
-        )}
-
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={() => setShowCreateEventModal(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Create Event
-          </button>
-
-          <button
-            onClick={handleTestSubmit}
-            className="px-4 py-2 bg-green-500 text-white rounded"
-          >
-            Test Submit
-          </button>
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Campus Events
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {loading
+                  ? "Loading events..."
+                  : `Discover ${events.length} upcoming events`}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateEventModal(true)}
+              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-sm"
+            >
+              + Create Event
+            </button>
+          </div>
         </div>
-        <div className="w-full h-screen">
-          <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "500px" }}
-            center={centerMap}
-            zoom={17}
-          >
-            <MarkerClusterer>
-              {(clusterer) => (
-                <>
-                  {filtered.map((event) => (
-                    <Marker
-                      key={event.id}
-                      position={{ lat: event.lat!, lng: event.lng! }}
-                      onClick={() => handleMarkerClick(event)}
-                      clusterer={clusterer}
-                    />
-                  ))}
-                </>
-              )}
-            </MarkerClusterer>
-            {/*infoWindow*/}
-          </GoogleMap>
+
+        {/* Map Section */}
+        <div className="p-8">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+            <GoogleMap
+              mapContainerStyle={{ width: "100%", height: "700px" }}
+              center={centerMap}
+              zoom={17}
+            >
+              <MarkerClusterer>
+                {(clusterer) => (
+                  <>
+                    {filtered.map((event) => (
+                      <Marker
+                        key={event.id}
+                        position={{ lat: event.lat!, lng: event.lng! }}
+                        onClick={() => handleMarkerClick(event)}
+                        clusterer={clusterer}
+                      />
+                    ))}
+                  </>
+                )}
+              </MarkerClusterer>
+            </GoogleMap>
+          </div>
         </div>
 
         <CreateEventModal

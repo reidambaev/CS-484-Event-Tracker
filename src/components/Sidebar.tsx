@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Filter size={18} />
             <span className="font-medium">Filters</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
             <button
               onClick={() => setFilterTag("")}
               className={`px-3 py-1 rounded-full text-sm ${
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* View Toggle */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button
             onClick={() => setView("map")}
             className={`flex-1 py-2 rounded ${
@@ -92,7 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             List View
           </button>
-        </div>
+        </div> */}
 
         {/* Events List */}
         <div className="space-y-3 pb-4">
