@@ -1,0 +1,26 @@
+Describe the functionality that you planned to have implemented successfully for your MVP. If I need to I will go back to your checkpoint 2 turnin to confirm.
+1. Users should be able to log in to the webpage, but logging in is not required to view the webpage.
+2. Unauthorized users (not logged in) are able to view the home page, event details (by clicking on an event in the list view), and profile page. 
+But are not allowed create event or rsvp to any events unless they log in. They can acces the profile page but My Events and My RSVPs list viwes will be empty (naturally, they should not be able to manage any user events)
+3. Once a user is authorized, they are are able to RSVP and create events through the home page and manage their events through the profile page
+4. When an authorized user clicks on RSVP, the event should be added to the user's profile RSVP event list (under My RSVPs). The corresponding button should change, indicating the event has been tracked.
+5. All fields must be specified except for the tags field before an event is created.
+6. An authorized user should be able to interact with Google Maps to select a location when creating an event.
+7. When an authorized user creates an event with tags, the corresponding tags should be added to the Filters list on the homepage.
+8. A user can select one of the tags from the filter list to filter out events without that tag from the homepage list view.
+9. When an authorized user creates an event, a red marker corresponding to the user's selected location from the create event menu should show up on the map.
+10. Minimal field checking on the frontend is implemented to ensure the database remains accurate:
+- date, start time, end time must be in the specified formats.
+- end time must be after the start time.
+11. When an authorized user creates an event, the event should be added to the user's list of created events in the Profiles page (under My Events list view)
+12. An authorized user should be able to manage/edit their events by clicking the managed buttons corresponding to their list of events and see their changes reflected when clicking on the button Edit Event.
+Changes should not be reflected when exiting out of said menu by clicking the close button. When an event is deleted via Delete Event button, the event should be removed from the user's my events list and from the database -
+meaning other users who RVSP to said event should have it removed from their RSVP event list view. Clicking the X button on the top right corner is the same as clicking the close button.
+13. Clicking on the cancel button on the create event menu on the home page should not modify anything.
+14. An authorized user can manage their lists of RSVP (tracked) events by changing their attending status by clicking on the Going/Not Going button corresponding to the event they want to be changed.
+15. When a user changes their attending status, the button appearance should reflect the change and indicates the status. Furthermore, the button status/appearance should change on the corresponding event on the homepage list view as well.
+16. Only authorized users with administrative privileges should be able to view the Admin page. When a user without admin previlege tries to access the admin page, it should bring them to the 404 not found page.
+17. When authorized users tries to access any invalid paths, it should bring the mto the 404 not found page.
+18. Admin users should be able to view all events from the databse. They are also able to edit the events and remove them. Editing and removing events should reflect on the databse and the front end.
+19. Authorized users should be able to log out of their accounts completely. When users log out, they are redirected to the home page. They are then able to log back in or log in to another account with the corresponding account's
+ respective data being loaded in to the front end.
