@@ -60,7 +60,7 @@ function Admin() {
                 className="px-1 py-1 bg-red-600 text-white rounded"
                 onClick={() => handleDeleteEvent(event.id)}
               >
-                remove
+                Remove
               </button>
             </p>
           </li>
