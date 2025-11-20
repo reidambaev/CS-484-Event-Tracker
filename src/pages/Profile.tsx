@@ -46,6 +46,7 @@ function Profile() {
       console.log(error);
     } else {
       setEvents(data);
+      fetchRvsp(userID);
     }
   }, []);
 
