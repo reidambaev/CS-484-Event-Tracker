@@ -66,7 +66,7 @@ function Profile() {
   ) => {
     const { error } = await supabase
       .from("user_events")
-      .update([{ status: attendinng ? "attending" : "not attending" }])
+      .update([{ status: attendinng ? "attending" : "not_attending" }])
       .eq("id", userEventID);
     if (error) {
       console.log(error);
