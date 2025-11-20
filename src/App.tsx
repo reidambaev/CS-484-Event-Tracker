@@ -4,7 +4,6 @@ import {
   Route,
   Link,
   useNavigate,
-  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import supabase from "./utils/supabase";
@@ -19,7 +18,6 @@ function AppContent() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const checkAdminStatus = async (userId: string) => {
@@ -56,9 +54,7 @@ function AppContent() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    if (location.pathname === "/profile") {
-      navigate(0); // Refresh the current page
-    }
+    navigate("/");
   };
 
   return (
