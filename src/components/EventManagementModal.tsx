@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  MapPin,
-  Calendar,
-  Clock,
-  Users,
-  Edit2,
-  Trash2,
-  Tag,
-} from "lucide-react";
+import { X, MapPin, Calendar, Users, Edit2, Trash2, Tag } from "lucide-react";
 import type { Event } from "../types";
 import supabase from "../utils/supabase";
 

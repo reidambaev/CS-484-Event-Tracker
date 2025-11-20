@@ -9,7 +9,6 @@ import {
   useLoadScript,
   GoogleMap,
   Marker,
-  InfoWindow,
   MarkerClusterer,
 } from "@react-google-maps/api";
 
@@ -26,7 +25,7 @@ function Home() {
   const [clickedEvent, setClickedEvent] = useState<Event | null>(null);
   const [filtered, setFiltered] = useState<Event[]>([]);
   const [centerMap, setCenterMap] = useState({
-    lat: 41.872219, 
+    lat: 41.872219,
     lng: -87.649204,
   });
 
@@ -150,8 +149,6 @@ function Home() {
       lng: event.lng,
     });
   };
-
-
 
   // RSVP Logic
   const handleRSVP = async (eventId: string) => {
@@ -307,35 +304,6 @@ function Home() {
     setClickedEvent(event);
   };
 
-  //make the window popup for when an event is clicked
-  const infoWindow = clickedEvent && (
-    <InfoWindow
-      onCloseClick={() => setClickedEvent(null)}
-      position={{ lat: clickedEvent.lat!, lng: clickedEvent.lng! }}
-    >
-      <div className="p-4">
-        <h4 className="text-sm font-semibold text-center mb-2">
-          {clickedEvent.title}
-        </h4>
-        <p className="text-sm">Date: {clickedEvent.date}</p>
-        <p className="text-sm">
-          Time: {clickedEvent.start_time} - {clickedEvent.end_time}
-        </p>
-        <p className="text-sm">Location: {clickedEvent.location}</p>
-        {clickedEvent.room && (
-          <p className="text-sm">Room: {clickedEvent.room}</p>
-        )}
-        <p className="text-sm">
-          Attendance: {clickedEvent.attendees} / {clickedEvent.max_capacity}
-        </p>
-        <p className="text-sm">
-          Spots Left: {clickedEvent.max_capacity - clickedEvent.attendees}
-        </p>
-        <p className="text-sm mt-2">About: {clickedEvent.description}</p>
-      </div>
-    </InfoWindow>
-  );
-
   if (!isLoaded) return <p>Loading...</p>;
 
   return (
@@ -385,13 +353,13 @@ function Home() {
           >
             <MarkerClusterer>
               {(clusterer) => (
-                <> 
+                <>
                   {filtered.map((event) => (
                     <Marker
                       key={event.id}
                       position={{ lat: event.lat!, lng: event.lng! }}
                       onClick={() => handleMarkerClick(event)}
-                      clusterer={clusterer} 
+                      clusterer={clusterer}
                     />
                   ))}
                 </>

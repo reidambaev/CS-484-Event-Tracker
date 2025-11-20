@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MapPin, Tag, Users, Calendar } from "lucide-react";
+import { MapPin, Tag, Users } from "lucide-react";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import supabase from "../utils/supabase";
 
@@ -31,8 +31,8 @@ function CreateEventModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { isLoaded } = useLoadScript({
-      googleMapsApiKey: import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_KEY,
-    });
+    googleMapsApiKey: import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_KEY,
+  });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -388,22 +388,22 @@ function CreateEventModal({
               Pick Location on Map
             </label>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <GoogleMap
-                  mapContainerStyle={{ width: "100%", height: "300px" }}
-                  center={{ lat: formData.lat, lng: formData.lng }}
-                  zoom={15}
-                  onClick={(e) => {
-                    if (e.latLng) {
-                      setFormData({
-                        ...formData,
-                        lat: e.latLng.lat(),
-                        lng: e.latLng.lng(),
-                      });
-                    }
-                  }}
-                >
-                  <Marker position={{ lat: formData.lat, lng: formData.lng }} />
-                </GoogleMap>
+              <GoogleMap
+                mapContainerStyle={{ width: "100%", height: "300px" }}
+                center={{ lat: formData.lat, lng: formData.lng }}
+                zoom={15}
+                onClick={(e) => {
+                  if (e.latLng) {
+                    setFormData({
+                      ...formData,
+                      lat: e.latLng.lat(),
+                      lng: e.latLng.lng(),
+                    });
+                  }
+                }}
+              >
+                <Marker position={{ lat: formData.lat, lng: formData.lng }} />
+              </GoogleMap>
             </div>
             <p className="text-gray-500 text-xs mt-1">
               Click on the map to set the event location (Lat:{" "}

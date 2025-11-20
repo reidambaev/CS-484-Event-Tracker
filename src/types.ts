@@ -6,6 +6,8 @@ export interface Event {
   room: string;
   lat?: number;
   lng?: number;
+  latitude?: number;
+  longitude?: number;
   date: string;
   start_time: string;
   end_time: string;
