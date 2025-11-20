@@ -75,6 +75,7 @@ function Admin() {
         onClose={() => {
           setShowModal(false);
           fetchEvents();
+          setEdit(null);
         }}
         eventID={edit}
       />
