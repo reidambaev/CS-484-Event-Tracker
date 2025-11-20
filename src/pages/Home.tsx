@@ -67,7 +67,8 @@ function Home() {
       const { data, error } = await supabase
         .from("user_events")
         .select("event_id")
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("status", "attending");
 
       if (error) throw error;
 
