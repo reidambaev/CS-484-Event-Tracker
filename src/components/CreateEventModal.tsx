@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, MapPin, Tag, Users, Calendar } from "lucide-react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import supabase from "../utils/supabase";
 
 interface CreateEventModalProps {
@@ -29,6 +29,10 @@ function CreateEventModal({
     lng: -87.648,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isLoaded } = useLoadScript({
+      googleMapsApiKey: import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_KEY,
+    });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -189,6 +193,7 @@ function CreateEventModal({
   };
 
   if (!isOpen) return null;
+  if (!isLoaded) return <p>Loading...</p>;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20 overflow-y-auto">
@@ -383,11 +388,6 @@ function CreateEventModal({
               Pick Location on Map
             </label>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <LoadScript
-                googleMapsApiKey={
-                  import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
-                }
-              >
                 <GoogleMap
                   mapContainerStyle={{ width: "100%", height: "300px" }}
                   center={{ lat: formData.lat, lng: formData.lng }}
@@ -404,7 +404,6 @@ function CreateEventModal({
                 >
                   <Marker position={{ lat: formData.lat, lng: formData.lng }} />
                 </GoogleMap>
-              </LoadScript>
             </div>
             <p className="text-gray-500 text-xs mt-1">
               Click on the map to set the event location (Lat:{" "}
