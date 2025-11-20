@@ -22,8 +22,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   setSearchQuery,
   filterTag,
   setFilterTag,
-  view,
-  setView,
   filteredEvents,
   allTags,
   onSelectEvent,
