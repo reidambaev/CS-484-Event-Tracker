@@ -167,6 +167,7 @@ function Profile() {
         onClose={() => {
           setShowModal(false);
           fetchEvents(user.id);
+          setEdit(null);
         }}
         eventID={edit}
       />
