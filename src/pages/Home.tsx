@@ -26,7 +26,7 @@ function Home() {
   const [clickedEvent, setClickedEvent] = useState<Event | null>(null);
   const [filtered, setFiltered] = useState<Event[]>([]);
   const [centerMap, setCenterMap] = useState({
-    lat: 41.872219,
+    lat: 41.872219, 
     lng: -87.649204,
   });
 
@@ -68,8 +68,7 @@ function Home() {
       const { data, error } = await supabase
         .from("user_events")
         .select("event_id")
-        .eq("user_id", userId)
-        .eq("status", "attending");
+        .eq("user_id", userId);
 
       if (error) throw error;
 
@@ -151,6 +150,8 @@ function Home() {
       lng: event.lng,
     });
   };
+
+
 
   // RSVP Logic
   const handleRSVP = async (eventId: string) => {
@@ -384,13 +385,13 @@ function Home() {
           >
             <MarkerClusterer>
               {(clusterer) => (
-                <>
+                <> 
                   {filtered.map((event) => (
                     <Marker
                       key={event.id}
                       position={{ lat: event.lat!, lng: event.lng! }}
                       onClick={() => handleMarkerClick(event)}
-                      clusterer={clusterer}
+                      clusterer={clusterer} 
                     />
                   ))}
                 </>

@@ -15,7 +15,7 @@ function Profile() {
     const { data, error } = await supabase
       .from("user_events")
       .select(
-        `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`
+        `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`,
       )
       .eq("user_id", userID)
       .order("status")
@@ -52,15 +52,9 @@ function Profile() {
 
   const handleDeleteEvent = async (eventID: any) => {
     const { error } = await supabase.from("events").delete().eq("id", eventID);
-
-    const { error: err } = await supabase
-      .from("user_events")
-      .delete()
-      .eq("event_id", eventID);
-
-    if (error || err) {
-      console.log(error || err);
-      alert(`failed to remove event: ${error || err}`);
+    if (error) {
+      console.log(error);
+      alert(`failed to remove event: ${error}`);
     } else {
       fetchEvents(user?.id);
     }
@@ -68,13 +62,12 @@ function Profile() {
 
   const handleUserEventStatus = async (
     userEventID: any,
-    attending: boolean
+    attendinng: boolean,
   ) => {
     const { error } = await supabase
       .from("user_events")
-      .update({ status: attending ? "attending" : "not_attending" })
+      .update([{ status: attendinng ? "attending" : "not_attending" }])
       .eq("id", userEventID);
-
     if (error) {
       console.log(error);
       alert(`failed to change event status ${error}`);
@@ -153,9 +146,8 @@ function Profile() {
                     onClick={() => {
                       handleUserEventStatus(
                         event.id,
-                        event.status == "attending" ? false : true
+                        event.status == "attending" ? false : true,
                       );
-                      console.log("handling");
                     }}
                   >
                     {text}
