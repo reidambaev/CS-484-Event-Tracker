@@ -67,7 +67,8 @@ function Home() {
       const { data, error } = await supabase
         .from("user_events")
         .select("event_id")
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("status", "attending");
 
       if (error) throw error;
 
@@ -172,14 +173,14 @@ function Home() {
       }
 
       if (existingRSVP) {
-        // Remove RSVP
-        const { error: deleteError } = await supabase
+        // Update status to not_attending
+        const { error: updateError } = await supabase
           .from("user_events")
-          .delete()
+          .update({ status: "not_attending" })
           .eq("event_id", eventId)
           .eq("user_id", user.id);
 
-        if (deleteError) throw deleteError;
+        if (updateError) throw updateError;
 
         // Update local state
         setUserRSVPs((prev) => prev.filter((id) => id !== eventId));
