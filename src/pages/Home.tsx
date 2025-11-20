@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import CreateEventModal from "../components/CreateEventModal";
+import EventDetailsModal from "../components/EventDetailsModal";
 import Sidebar from "../components/Sidebar";
 import supabase from "../utils/supabase";
 import type { Event } from "../types";
@@ -144,6 +145,7 @@ function Home() {
 
   const handleSelectEvent = (event: any) => {
     console.log("Selected event:", event);
+    setClickedEvent(event);
     setCenterMap({
       lat: event.lat,
       lng: event.lng,
@@ -304,19 +306,31 @@ function Home() {
     setClickedEvent(event);
   };
 
-  //make the window popup for when an event is clicked (Needs work)
+  //make the window popup for when an event is clicked
   const infoWindow = clickedEvent && (
     <InfoWindow
       onCloseClick={() => setClickedEvent(null)}
       position={{ lat: clickedEvent.lat!, lng: clickedEvent.lng! }}
     >
       <div className="p-4">
-        <h4 className="text-sm text-center">{clickedEvent.title}</h4>
+        <h4 className="text-sm font-semibold text-center mb-2">
+          {clickedEvent.title}
+        </h4>
         <p className="text-sm">Date: {clickedEvent.date}</p>
         <p className="text-sm">
           Time: {clickedEvent.start_time} - {clickedEvent.end_time}
         </p>
-        <p className="text-sm">About: {clickedEvent.description}</p>
+        <p className="text-sm">Location: {clickedEvent.location}</p>
+        {clickedEvent.room && (
+          <p className="text-sm">Room: {clickedEvent.room}</p>
+        )}
+        <p className="text-sm">
+          Attendance: {clickedEvent.attendees} / {clickedEvent.max_capacity}
+        </p>
+        <p className="text-sm">
+          Spots Left: {clickedEvent.max_capacity - clickedEvent.attendees}
+        </p>
+        <p className="text-sm mt-2">About: {clickedEvent.description}</p>
       </div>
     </InfoWindow>
   );
@@ -382,7 +396,7 @@ function Home() {
                 </>
               )}
             </MarkerClusterer>
-            {infoWindow}
+            {/*infoWindow*/}
           </GoogleMap>
         </div>
 
@@ -391,6 +405,15 @@ function Home() {
           onClose={() => setShowCreateEventModal(false)}
           onSuccess={fetchEvents}
         />
+
+        {clickedEvent && (
+          <EventDetailsModal
+            event={clickedEvent}
+            onClose={() => setClickedEvent(null)}
+            onRSVP={handleRSVP}
+            isRSVPd={userRSVPs.some((rsvp) => rsvp === clickedEvent.id)}
+          />
+        )}
       </div>
     </div>
   );
