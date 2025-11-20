@@ -1,4 +1,11 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 import supabase from "./utils/supabase";
 import Home from "./pages/Home";
@@ -7,8 +14,10 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,41 +35,58 @@ function App() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    if (location.pathname === "/profile") {
+      navigate(0); // Refresh the current page
+    }
   };
 
   return (
-    <BrowserRouter>
-      <div>
-        <nav className="bg-gray-200 p-4">
-          <Link to="/" className="mr-4">
+    <div>
+      <nav className="bg-gray-200 p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <Link to="/" className="mr-4 hover:text-blue-600">
             Home
           </Link>
-          <Link to="/login" className="mr-4">
-            Login
-          </Link>
-          <Link to="/profile" className="mr-4">
+          <Link to="/profile" className="mr-4 hover:text-blue-600">
             Profile
           </Link>
-          <Link to="/admin" className="mr-4">
+          <Link to="/admin" className="mr-4 hover:text-blue-600">
             Admin
           </Link>
-          {user && (
+        </div>
+        <div>
+          {user ? (
             <button
               onClick={handleLogout}
-              className="ml-4 px-2 py-1 bg-red-500 text-white rounded"
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             >
               Logout
             </button>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors inline-block"
+            >
+              Login
+            </Link>
           )}
-        </nav>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+        </div>
+      </nav>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
