@@ -16,14 +16,19 @@ function Home() {
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]);
-  const [view, setView] = useState<"map" | "list">("list");
+  const [filterDateRange, setFilterDateRange] = useState<{
+    start: string;
+    end: string;
+  }>({ start: "", end: "" });
+  const [filterLocations, setFilterLocations] = useState<string[]>([]);
+  const [filterCapacityAvailable, setFilterCapacityAvailable] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [allLocations, setAllLocations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [userRSVPs, setUserRSVPs] = useState<string[]>([]);
   const [clickedEvent, setClickedEvent] = useState<Event | null>(null);
-  const [filtered, setFiltered] = useState<Event[]>([]);
   const [centerMap, setCenterMap] = useState({
     lat: 41.872219,
     lng: -87.649204,
@@ -140,12 +145,13 @@ function Home() {
       });
       setAllTags(sortedTags);
 
-      setEvents(transformedEvents);
+      // Extract unique locations
+      const uniqueLocations = Array.from(
+        new Set(transformedEvents.map((e) => e.location))
+      ).sort();
+      setAllLocations(uniqueLocations);
 
-      const filtered = transformedEvents.filter(
-        (e) => e.lat !== null && e.lng !== null
-      );
-      setFiltered(filtered);
+      setEvents(transformedEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -223,16 +229,58 @@ function Home() {
     }
   };
 
-  // Filter events based on search and tags (AND logic, case-insensitive)
+  // Filter events based on search and all filter criteria (AND logic, case-insensitive)
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTags = filterTags.length === 0 || filterTags.every(tag => 
-      event.tags.some(eventTag => eventTag.toLowerCase() === tag.toLowerCase())
+    const matchesTags =
+      filterTags.length === 0 ||
+      filterTags.every((tag) =>
+        event.tags.some(
+          (eventTag) => eventTag.toLowerCase() === tag.toLowerCase()
+        )
+      );
+
+    // Date range filter
+    let matchesDateRange = true;
+    if (filterDateRange.start || filterDateRange.end) {
+      const eventDate = new Date(event.date);
+      if (filterDateRange.start) {
+        const startDate = new Date(filterDateRange.start);
+        matchesDateRange = matchesDateRange && eventDate >= startDate;
+      }
+      if (filterDateRange.end) {
+        const endDate = new Date(filterDateRange.end);
+        matchesDateRange = matchesDateRange && eventDate <= endDate;
+      }
+    }
+
+    // Location filter
+    const matchesLocation =
+      filterLocations.length === 0 || filterLocations.includes(event.location);
+
+    // Capacity available filter
+    const matchesCapacity =
+      !filterCapacityAvailable || event.attendees < event.max_capacity;
+
+    return (
+      matchesSearch &&
+      matchesTags &&
+      matchesDateRange &&
+      matchesLocation &&
+      matchesCapacity
     );
-    return matchesSearch && matchesTags;
   });
+
+  // Filter events that have valid coordinates for the map
+  const filteredEventsWithCoords = filteredEvents.filter(
+    (e) =>
+      e.lat !== null &&
+      e.lat !== undefined &&
+      e.lng !== null &&
+      e.lng !== undefined
+  );
 
   //when a user clicks on a marker, sets the event for info window
   const handleMarkerClick = (event: Event) => {
@@ -248,10 +296,15 @@ function Home() {
         setSearchQuery={setSearchQuery}
         filterTags={filterTags}
         setFilterTags={setFilterTags}
-        view={view}
-        setView={setView}
+        filterDateRange={filterDateRange}
+        setFilterDateRange={setFilterDateRange}
+        filterLocations={filterLocations}
+        setFilterLocations={setFilterLocations}
+        filterCapacityAvailable={filterCapacityAvailable}
+        setFilterCapacityAvailable={setFilterCapacityAvailable}
         filteredEvents={filteredEvents}
         allTags={allTags}
+        allLocations={allLocations}
         onSelectEvent={handleSelectEvent}
         onRSVP={handleRSVP}
         userRSVPs={userRSVPs}
@@ -291,7 +344,7 @@ function Home() {
               <MarkerClusterer>
                 {(clusterer) => (
                   <>
-                    {filtered.map((event) => (
+                    {filteredEventsWithCoords.map((event) => (
                       <Marker
                         key={event.id}
                         position={{ lat: event.lat!, lng: event.lng! }}
