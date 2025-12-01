@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { X, MapPin, Calendar, Users } from "lucide-react";
+import {
+  X,
+  MapPin,
+  Calendar,
+  Users,
+  Bell,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
 import type { Event } from "../types";
 
 interface EventDetailsModalProps {
@@ -18,6 +26,11 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   const [localAttendees, setLocalAttendees] = useState(event.attendees || 0);
   const [localIsRSVPd, setLocalIsRSVPd] = useState(isRSVPd);
 
+  // Notification preferences
+  const [emailNotifications, setEmailNotifications] = useState(false);
+  const [textNotifications, setTextNotifications] = useState(false);
+  const [reminderTime, setReminderTime] = useState("1-hour");
+
   useEffect(() => {
     setLocalAttendees(event.attendees || 0);
     setLocalIsRSVPd(isRSVPd);
@@ -30,6 +43,45 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     setLocalAttendees((prev) => (wasRSVPd ? prev - 1 : prev + 1));
     // Call the parent handler
     await onRSVP(event.id);
+  };
+
+  const handleEmailToggle = () => {
+    setEmailNotifications(!emailNotifications);
+    // Fake API response
+    setTimeout(() => {
+      alert(
+        `Email notifications ${
+          !emailNotifications ? "enabled" : "disabled"
+        } for ${event.title}`
+      );
+    }, 300);
+  };
+
+  const handleTextToggle = () => {
+    setTextNotifications(!textNotifications);
+    // Fake API response
+    setTimeout(() => {
+      alert(
+        `Text notifications ${
+          !textNotifications ? "enabled" : "disabled"
+        } for ${event.title}`
+      );
+    }, 300);
+  };
+
+  const handleReminderChange = (value: string) => {
+    setReminderTime(value);
+    // Fake API response
+    setTimeout(() => {
+      const timeLabels: { [key: string]: string } = {
+        "15-min": "15 minutes",
+        "30-min": "30 minutes",
+        "1-hour": "1 hour",
+        "1-day": "1 day",
+        "1-week": "1 week",
+      };
+      alert(`Reminder set for ${timeLabels[value]} before event`);
+    }, 300);
   };
 
   if (!event) return null;
@@ -129,6 +181,101 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               </div>
             </div>
           </div>
+
+          <hr className="border-gray-100" />
+
+          {/* Notification Settings */}
+          {localIsRSVPd && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-5">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <Bell size={20} className="mr-2 text-purple-600" />
+                Notification Preferences
+              </h3>
+
+              <div className="space-y-4">
+                {/* Email Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Mail size={18} className="mr-3 text-gray-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Email Notifications
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Receive updates via email
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleEmailToggle}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      emailNotifications ? "bg-purple-600" : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        emailNotifications ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Text Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <MessageSquare size={18} className="mr-3 text-gray-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Text Notifications
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Receive updates via SMS
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleTextToggle}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      textNotifications ? "bg-purple-600" : "bg-gray-300"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        textNotifications ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Reminder Time Selector */}
+                <div className="pt-2">
+                  <label className="block font-medium text-gray-900 mb-2">
+                    Reminder Time
+                  </label>
+                  <select
+                    value={reminderTime}
+                    onChange={(e) => handleReminderChange(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="15-min">15 minutes before</option>
+                    <option value="30-min">30 minutes before</option>
+                    <option value="1-hour">1 hour before</option>
+                    <option value="1-day">1 day before</option>
+                    <option value="1-week">1 week before</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!localIsRSVPd && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+              <Bell size={24} className="mx-auto mb-2 text-gray-400" />
+              <p className="text-gray-600 text-sm">
+                RSVP to this event to enable notification preferences
+              </p>
+            </div>
+          )}
 
           <hr className="border-gray-100" />
 
