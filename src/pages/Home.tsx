@@ -15,7 +15,7 @@ import {
 function Home() {
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTag, setFilterTag] = useState("");
+  const [filterTags, setFilterTags] = useState<string[]>([]);
   const [view, setView] = useState<"map" | "list">("list");
   const [events, setEvents] = useState<Event[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -107,10 +107,6 @@ function Home() {
 
       if (tagsError) throw tagsError;
 
-      // Set all available tags from the tags table
-      const allTagNames = tagsData.map((tag: any) => tag.name);
-      setAllTags(allTagNames);
-
       // Transform the data to match the Event interface
       const transformedEvents: Event[] = eventsData.map((event: any) => ({
         id: event.id,
@@ -128,6 +124,21 @@ function Home() {
         attendees: event.attendee_count || 0,
         created_by: event.created_by,
       }));
+
+      // Count tag usage across all events
+      const tagCounts: { [key: string]: number } = {};
+      transformedEvents.forEach((event) => {
+        event.tags.forEach((tag) => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+
+      // Sort tags by usage count (most used first)
+      const allTagNames = tagsData.map((tag: any) => tag.name);
+      const sortedTags = allTagNames.sort((a: string, b: string) => {
+        return (tagCounts[b] || 0) - (tagCounts[a] || 0);
+      });
+      setAllTags(sortedTags);
 
       setEvents(transformedEvents);
 
@@ -212,13 +223,15 @@ function Home() {
     }
   };
 
-  // Filter events based on search and tag
+  // Filter events based on search and tags (AND logic, case-insensitive)
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTag = !filterTag || event.tags.includes(filterTag);
-    return matchesSearch && matchesTag;
+    const matchesTags = filterTags.length === 0 || filterTags.every(tag => 
+      event.tags.some(eventTag => eventTag.toLowerCase() === tag.toLowerCase())
+    );
+    return matchesSearch && matchesTags;
   });
 
   //when a user clicks on a marker, sets the event for info window
@@ -233,8 +246,8 @@ function Home() {
       <Sidebar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        filterTag={filterTag}
-        setFilterTag={setFilterTag}
+        filterTags={filterTags}
+        setFilterTags={setFilterTags}
         view={view}
         setView={setView}
         filteredEvents={filteredEvents}

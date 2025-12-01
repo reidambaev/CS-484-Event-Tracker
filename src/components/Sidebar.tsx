@@ -1,13 +1,13 @@
-import React from "react";
-import { Search, Filter } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import EventCard from "./EventCard";
 import type { Event } from "../types";
 
 interface SidebarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filterTag: string;
-  setFilterTag: (tag: string) => void;
+  filterTags: string[];
+  setFilterTags: (tags: string[]) => void;
   view: "map" | "list";
   setView: (view: "map" | "list") => void;
   filteredEvents: Event[];
@@ -20,14 +20,28 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
   searchQuery,
   setSearchQuery,
-  filterTag,
-  setFilterTag,
+  filterTags,
+  setFilterTags,
+  view,
+  setView,
   filteredEvents,
   allTags,
   onSelectEvent,
   onRSVP,
   userRSVPs,
 }) => {
+  const [showAllTags, setShowAllTags] = useState(false);
+
+  const maxVisibleTags = 6; // Show 6 tags initially
+  const visibleTags = showAllTags ? allTags : allTags.slice(0, maxVisibleTags);
+
+  const toggleTag = (tag: string) => {
+    if (filterTags.includes(tag)) {
+      setFilterTags(filterTags.filter((t) => t !== tag));
+    } else {
+      setFilterTags([...filterTags, tag]);
+    }
+  };
   return (
     <aside className="w-80 bg-white border-r overflow-y-auto h-full flex flex-col">
       <div className="p-4 space-y-4">
@@ -45,31 +59,52 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Filters */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Filter size={18} />
-            <span className="font-medium">Filters</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Filter size={18} />
+              <span className="font-medium">Filters</span>
+            </div>
+            {filterTags.length > 0 && (
+              <button
+                onClick={() => setFilterTags([])}
+                className="text-xs text-purple-600 hover:text-purple-700"
+              >
+                Clear all
+              </button>
+            )}
           </div>
-          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-            <button
-              onClick={() => setFilterTag("")}
-              className={`px-3 py-1 rounded-full text-sm ${
-                !filterTag ? "bg-purple-600 text-white" : "bg-gray-100"
-              }`}
-            >
-              All
-            </button>
-            {allTags.map((tag) => (
+          <div className="flex flex-wrap gap-2">
+            {visibleTags.map((tag) => (
               <button
                 key={tag}
-                onClick={() => setFilterTag(tag)}
-                className={`px-3 py-1 rounded-full text-sm ${
-                  filterTag === tag ? "bg-purple-600 text-white" : "bg-gray-100"
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  filterTags.includes(tag)
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
                 }`}
               >
                 {tag}
               </button>
             ))}
           </div>
+          {allTags.length > maxVisibleTags && (
+            <button
+              onClick={() => setShowAllTags(!showAllTags)}
+              className="mt-2 flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 transition-colors"
+            >
+              {showAllTags ? (
+                <>
+                  Show less <ChevronUp size={16} />
+                </>
+              ) : (
+                <>
+                  Show all ({allTags.length - maxVisibleTags} more){" "}
+                  <ChevronDown size={16} />
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* View Toggle */}
