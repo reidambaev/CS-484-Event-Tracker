@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import supabase from "../utils/supabase";
+import {X} from "lucide-react"
+import { useNavigate } from "react-router-dom";
+
+
+// interface TagsProps{
+//     onClose: () => void;
+// }
 
 type Tag = {
   tag_id: number;
@@ -11,6 +18,11 @@ function Tags() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  function handleClose(){
+    navigate("/");
+  }
 
   useEffect(() => {
     async function fetchUser() {
@@ -103,54 +115,72 @@ function Tags() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div>
-        <h1 style={{ fontSize: "48px", textAlign:"center"}}>
-        Event Tags
-        </h1>
-        <span style={{margin: "12px", border: "2px solid black ", padding: "5px", display: "inline-block",marginBottom: "16px"}}>
+<div
+  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+  onClick={handleClose}>
+  <div
+    className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden" 
+    onClick={(e) => e.stopPropagation()}>
+    <div className="bg-purple-600 text-white p-6 rounded-t-xl relative shrink-0"
+    >
+      <div className="flex justify-between items-start"
+      >
+        <div className="pr-8">
+          <h2 className="text-2xl font-bold mb-2 leading-tight"
+          >
+            Event Tags
+          </h2>
+        </div>
+        <button
+              onClick={handleClose}
+              className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-colors absolute top-4 right-4"
+              >
+              <X size={24} />
+            </button>
+      </div>
+    </div>
+    <div className="p-6">
+      <span
+        style={{margin: "12px", border: "2px solid black ", padding: "5px", display: "inline-block", marginBottom: "16px",
+        }}>
         <span
-        style={{
-        display: "inline-block",
-        width: "24px",
-        height: "24px",
-        backgroundColor: "#06f10eff", 
-        margin: "0 8px",
-        verticalAlign: "middle",
-        }}
+          style={{display: "inline-block", width: "24px", height: "24px", backgroundColor: "#06f10eff", margin: "0 8px", verticalAlign: "middle",
+          }}
         ></span>
         Tag Followed
         <span
-        style={{
-        display: "inline-block",
-        width: "24px",
-        height: "24px",
-        backgroundColor: "#ea1616ff", 
-        margin: "0 8px",
-        verticalAlign: "middle",
-        }}
+          style={{
+                display: "inline-block",
+                width: "24px",
+                height: "24px",
+            backgroundColor: "#ea1616ff",
+            margin: "0 8px",
+            verticalAlign: "middle",
+          }}
         ></span>
         Tag Not Followed
-        </span>
-
-    <div>
-
-      {tags.map(tag => (
-        <button
-          key={tag.tag_id}
-          onClick={() => tagClicked(tag)}
-          style={{
-            margin: "12px",
-            padding: "8px 48px",
-            background: tag.isFollowed ? "#06f10eff" : "#ea1616ff",
-            color: tag.isFollowed ? "#fff" : "#000",
-            borderRadius: "64px",
-          }}
-        >
-          {tag.name}
-        </button>
-      ))}
+      </span>
+      <div>
+        {tags.map((tag) => (
+          <button
+            key={tag.tag_id}
+            onClick={() => tagClicked(tag)}
+            style={{
+              margin: "12px",
+              padding: "8px 48px",
+              background: tag.isFollowed ? "#06f10eff" : "#ea1616ff",
+              color: tag.isFollowed ? "#fff" : "#000",
+              borderRadius: "64px",
+              cursor: "pointer",
+            }}
+          >
+            {tag.name}
+          </button>
+        ))}
+      </div>
     </div>
-    </div>
+  </div>
+</div>
   );
 }
 
