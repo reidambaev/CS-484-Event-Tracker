@@ -21,7 +21,7 @@ function Profile() {
     const { data, error } = await supabase
       .from("user_events")
       .select(
-        `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`
+        `id, event_id, user_id, status, events!inner(id, title, description, location, date, start_time, max_capacity, attendee_count, end_time, tags, room)`,
       )
       .eq("user_id", userID)
       .order("status")
@@ -68,7 +68,7 @@ function Profile() {
 
   const handleUserEventStatus = async (
     userEventID: any,
-    attending: boolean
+    attending: boolean,
   ) => {
     const { error } = await supabase
       .from("user_events")
@@ -121,7 +121,99 @@ function Profile() {
       fetchEvents(data.user ? data.user.id : null);
       fetchRvsp(data.user ? data.user.id : null);
     });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session && session.user) {
+          setUser(session.user);
+          fetchEvents(session.user.id);
+          fetchRvsp(session.user.id);
+        }
+      },
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
+
+  const handleGoogleSync = async () => {
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    let accessToken = sessionData.session?.provider_token;
+
+    if (!accessToken) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          scopes: "https://www.googleapis.com/auth/calendar.events",
+          redirectTo: window.location.origin + "/profile",
+        },
+      });
+      if (error) {
+        console.error("Google sign-in error:", error);
+        alert("Failed to connect to Google. Please try again.");
+      }
+      return;
+    }
+
+    const attendingEvents = rvsp
+      .filter((e: any) => e.status === "attending")
+      .map((e: any) => e.events);
+
+    if (attendingEvents.length === 0) {
+      return;
+    }
+
+    for (const event of attendingEvents) {
+      const startTime = `${event.date}T${event.start_time}`;
+      const endTime = `${event.date}T${event.end_time}`;
+
+      const gCalEvent = {
+        summary: event.title,
+        location: `${event.location}${event.room ? `, ${event.room}` : ""}`,
+        description: event.description,
+        start: {
+          dateTime: startTime,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        end: {
+          dateTime: endTime,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      };
+      console.log(
+        startTime,
+        endTime,
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+      );
+      console.log(accessToken ? "YES" : "NO");
+      try {
+        const response = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/primary/events`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(gCalEvent),
+          },
+        );
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            `Failed to add "${event.title}": ${errorData.error.message}`,
+          );
+        }
+      } catch (error) {
+        console.error("Calendar sync error:", error);
+        alert(`Sync failed for one or more events. Check Console for details.`);
+        break;
+      }
+    }
+    alert("Google Calendar sync complete.");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -218,7 +310,14 @@ function Profile() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">My RSVPs</h2>
+              <h2 className="text-2xl font-bold text-gray-900">My RSVPs</h2>{" "}
+              <button
+                className="rounded0full text-sm bg-green-100 text-green-700 rounded-full"
+                onClick={handleGoogleSync}
+              >
+                {" "}
+                📅 Sync With Google Calendar
+              </button>
               <p className="text-gray-600 mt-1">Events you're attending</p>
             </div>
             <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
@@ -281,7 +380,7 @@ function Profile() {
                         e.stopPropagation();
                         handleUserEventStatus(
                           event.id,
-                          event.status === "attending" ? false : true
+                          event.status === "attending" ? false : true,
                         );
                       }}
                     >
@@ -292,6 +391,43 @@ function Profile() {
               ))
             )}
           </ul>
+        </div>
+
+        {/* My Calendar Section */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2x1 font-bold text-gray-900">My Calendar</h2>
+              <p className="text-gray-600 mt-1">
+                Live view of your primary Google Calendar
+              </p>
+            </div>
+          </div>
+
+          {user?.email ? (
+            <div className="shadow-lg border border-gray-200 rounded-lg overflow-hidden">
+                           {" "}
+              <iframe
+                title="Google Calendar"
+                src={`https://calendar.google.com/calendar/embed?src=${user.email}&ctz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`}
+                style={{ border: 0 }}
+                width="100%"
+                height="600"
+                frameBorder="0"
+                scrolling="no"
+              ></iframe>
+                         {" "}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
+                           {" "}
+              <p className="text-gray-500">
+                                Sign in to view your calendar.            
+                 {" "}
+              </p>
+                         {" "}
+            </div>
+          )}
         </div>
 
         {/* Back to Home Link */}
@@ -348,7 +484,7 @@ function Profile() {
             if (userEvent) {
               await handleUserEventStatus(
                 userEvent.id,
-                userEvent.status !== "attending"
+                userEvent.status !== "attending",
               );
             }
             // Refresh to get updated data
@@ -356,7 +492,7 @@ function Profile() {
           }}
           isRSVPd={rvsp.some(
             (e: any) =>
-              e.events.id === selectedEvent.id && e.status === "attending"
+              e.events.id === selectedEvent.id && e.status === "attending",
           )}
         />
       )}

@@ -11,6 +11,7 @@ function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
+          scopes: "https://www.googleapis.com/auth/calendar.events",
           redirectTo: window.location.origin,
         },
       });
