@@ -121,14 +121,6 @@ function Profile() {
       fetchEvents(data.user ? data.user.id : null);
       fetchRvsp(data.user ? data.user.id : null);
     });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      return;
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const handleGoogleSync = async () => {
