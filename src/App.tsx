@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Tags from "./pages/Tags";
 
 function AppContent() {
   const [user, setUser] = useState<any>(null);
@@ -67,6 +68,9 @@ function AppContent() {
           <Link to="/profile" className="mr-4 hover:text-blue-600">
             Profile
           </Link>
+          <Link to="/tags" className="mr-4 hover:text-blue-600">
+            Tags
+          </Link>
           {isAdmin && (
             <Link to="/admin" className="mr-4 hover:text-blue-600">
               Admin
@@ -95,6 +99,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/tags" element={<Tags />}/>
         <Route
           path="/admin"
           element={
