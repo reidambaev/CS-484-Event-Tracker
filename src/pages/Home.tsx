@@ -176,7 +176,7 @@ function Home() {
     }
 
     try {
-      // Check if user has already RSVP'd
+      // Check if user has already RSVP'd (including not_attending status)
       const { data: existingRSVP, error: checkError } = await supabase
         .from("user_events")
         .select("*")
@@ -190,19 +190,33 @@ function Home() {
       }
 
       if (existingRSVP) {
-        // Update status to not_attending
+        // Toggle status based on current state
+        const newStatus =
+          existingRSVP.status === "attending" ? "not_attending" : "attending";
         const { error: updateError } = await supabase
           .from("user_events")
-          .update({ status: "not_attending" })
+          .update({ status: newStatus })
           .eq("event_id", eventId)
           .eq("user_id", user.id);
 
         if (updateError) throw updateError;
 
         // Update local state
-        setUserRSVPs((prev) => prev.filter((id) => id !== eventId));
-        alert("RSVP removed!");
+        if (newStatus === "attending") {
+          setUserRSVPs((prev) => [...prev, eventId]);
+          alert("RSVP confirmed!");
+        } else {
+          setUserRSVPs((prev) => prev.filter((id) => id !== eventId));
+          alert("RSVP removed!");
+        }
       } else {
+        // Ensure profile exists (user_events.user_id references profiles.id)
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .upsert({ id: user.id, email: user.email }, { onConflict: "id" });
+
+        if (profileError) throw profileError;
+
         // Add RSVP
         const { error: insertError } = await supabase
           .from("user_events")

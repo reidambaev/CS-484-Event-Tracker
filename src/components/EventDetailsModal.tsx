@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  MapPin,
-  Calendar,
-  Users,
-  Bell,
-  Mail,
-  MessageSquare,
-} from "lucide-react";
+import { X, MapPin, Calendar, Users, Bell, Mail } from "lucide-react";
 import type { Event } from "../types";
+import supabase from "../utils/supabase";
 
 interface EventDetailsModalProps {
   event: Event;
@@ -25,16 +18,47 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 }) => {
   const [localAttendees, setLocalAttendees] = useState(event.attendees || 0);
   const [localIsRSVPd, setLocalIsRSVPd] = useState(isRSVPd);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Notification preferences
-  const [emailNotifications, setEmailNotifications] = useState(false);
-  const [textNotifications, setTextNotifications] = useState(false);
-  const [reminderTime, setReminderTime] = useState("1-hour");
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [reminderTime, setReminderTime] = useState("24");
 
   useEffect(() => {
     setLocalAttendees(event.attendees || 0);
     setLocalIsRSVPd(isRSVPd);
   }, [event.attendees, isRSVPd]);
+
+  // Fetch user and notification preferences
+  useEffect(() => {
+    const fetchUserAndPreferences = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+
+        if (isRSVPd) {
+          // Fetch event-specific notification preferences
+          const { data: eventPref } = await supabase
+            .from("event_notifications")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("event_id", event.id)
+            .maybeSingle();
+
+          if (eventPref) {
+            setEmailNotifications(eventPref.email_notifications ?? true);
+            setReminderTime(eventPref.notification_timing?.toString() || "24");
+          }
+          // Use defaults if no event-specific preferences exist
+        }
+      }
+    };
+
+    fetchUserAndPreferences();
+  }, [event.id, isRSVPd]);
 
   const handleRSVP = async () => {
     const wasRSVPd = localIsRSVPd;
@@ -43,45 +67,96 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     setLocalAttendees((prev) => (wasRSVPd ? prev - 1 : prev + 1));
     // Call the parent handler
     await onRSVP(event.id);
-  };
 
-  const handleEmailToggle = () => {
-    setEmailNotifications(!emailNotifications);
-    // Fake API response
-    setTimeout(() => {
-      alert(
-        `Email notifications ${
-          !emailNotifications ? "enabled" : "disabled"
-        } for ${event.title}`
+    // Create default notification preferences when RSVPing
+    if (!wasRSVPd && userId) {
+      await supabase.from("event_notifications").upsert(
+        {
+          user_id: userId,
+          event_id: event.id,
+          email_notifications: true,
+          notification_timing: 24,
+        },
+        {
+          onConflict: "user_id,event_id",
+        }
       );
-    }, 300);
+    }
   };
 
-  const handleTextToggle = () => {
-    setTextNotifications(!textNotifications);
-    // Fake API response
-    setTimeout(() => {
-      alert(
-        `Text notifications ${
-          !textNotifications ? "enabled" : "disabled"
-        } for ${event.title}`
+  const handleEmailToggle = async () => {
+    if (!userId || loading) return;
+
+    setLoading(true);
+    const newValue = !emailNotifications;
+    setEmailNotifications(newValue);
+
+    try {
+      // Save event-specific notification preference
+      const { error } = await supabase.from("event_notifications").upsert(
+        {
+          user_id: userId,
+          event_id: event.id,
+          email_notifications: newValue,
+          notification_timing: parseInt(reminderTime),
+        },
+        {
+          onConflict: "user_id,event_id",
+        }
       );
-    }, 300);
+
+      if (error) throw error;
+
+      alert(
+        `Email notifications ${newValue ? "enabled" : "disabled"} for ${
+          event.title
+        }`
+      );
+    } catch (error) {
+      console.error("Error saving notification preference:", error);
+      setEmailNotifications(!newValue); // Revert on error
+      alert("Failed to update notification preferences");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReminderChange = (value: string) => {
+  const handleReminderChange = async (value: string) => {
+    if (!userId || loading) return;
+
+    setLoading(true);
     setReminderTime(value);
-    // Fake API response
-    setTimeout(() => {
+
+    try {
+      // Save event-specific notification preference
+      const { error } = await supabase.from("event_notifications").upsert(
+        {
+          user_id: userId,
+          event_id: event.id,
+          email_notifications: emailNotifications,
+          notification_timing: parseInt(value),
+        },
+        {
+          onConflict: "user_id,event_id",
+        }
+      );
+
+      if (error) throw error;
+
       const timeLabels: { [key: string]: string } = {
-        "15-min": "15 minutes",
-        "30-min": "30 minutes",
-        "1-hour": "1 hour",
-        "1-day": "1 day",
-        "1-week": "1 week",
+        "0.25": "15 minutes",
+        "0.5": "30 minutes",
+        "1": "1 hour",
+        "24": "1 day",
+        "168": "1 week",
       };
       alert(`Reminder set for ${timeLabels[value]} before event`);
-    }, 300);
+    } catch (error) {
+      console.error("Error saving reminder time:", error);
+      alert("Failed to update reminder time");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!event) return null;
@@ -220,33 +295,6 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   </button>
                 </div>
 
-                {/* Text Toggle */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <MessageSquare size={18} className="mr-3 text-gray-600" />
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        Text Notifications
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Receive updates via SMS
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleTextToggle}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      textNotifications ? "bg-purple-600" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        textNotifications ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-
                 {/* Reminder Time Selector */}
                 <div className="pt-2">
                   <label className="block font-medium text-gray-900 mb-2">
@@ -255,13 +303,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   <select
                     value={reminderTime}
                     onChange={(e) => handleReminderChange(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={loading}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="15-min">15 minutes before</option>
-                    <option value="30-min">30 minutes before</option>
-                    <option value="1-hour">1 hour before</option>
-                    <option value="1-day">1 day before</option>
-                    <option value="1-week">1 week before</option>
+                    <option value="0.25">15 minutes before</option>
+                    <option value="0.5">30 minutes before</option>
+                    <option value="1">1 hour before</option>
+                    <option value="24">1 day before</option>
+                    <option value="168">1 week before</option>
                   </select>
                 </div>
               </div>

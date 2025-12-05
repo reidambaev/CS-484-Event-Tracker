@@ -99,7 +99,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/tags" element={<Tags />}/>
+        <Route path="/tags" element={<Tags />} />
         <Route
           path="/admin"
           element={
