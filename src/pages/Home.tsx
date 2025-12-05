@@ -210,14 +210,7 @@ function Home() {
           alert("RSVP removed!");
         }
       } else {
-        // Ensure profile exists (user_events.user_id references profiles.id)
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .upsert({ id: user.id, email: user.email }, { onConflict: "id" });
-
-        if (profileError) throw profileError;
-
-        // Add RSVP
+        // Add RSVP - profile should already exist from auth signup
         const { error: insertError } = await supabase
           .from("user_events")
           .insert([
@@ -228,7 +221,15 @@ function Home() {
             },
           ]);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          // If profile doesn't exist, show helpful error
+          if (insertError.code === "23503") {
+            alert("Profile not found. Please try logging out and back in.");
+          } else {
+            throw insertError;
+          }
+          return;
+        }
 
         // Update local state
         setUserRSVPs((prev) => [...prev, eventId]);
