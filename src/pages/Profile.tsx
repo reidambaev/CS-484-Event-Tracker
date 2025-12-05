@@ -405,7 +405,6 @@ function Profile() {
 
           {user?.email ? (
             <div className="shadow-lg border border-gray-200 rounded-lg overflow-hidden">
-                           {" "}
               <iframe
                 title="Google Calendar"
                 src={`https://calendar.google.com/calendar/embed?src=${user.email}&ctz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`}
@@ -415,16 +414,10 @@ function Profile() {
                 frameBorder="0"
                 scrolling="no"
               ></iframe>
-                         {" "}
             </div>
           ) : (
             <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                           {" "}
-              <p className="text-gray-500">
-                                Sign in to view your calendar.            
-                 {" "}
-              </p>
-                         {" "}
+              <p className="text-gray-500">Sign in to view your calendar.</p>
             </div>
           )}
         </div>
