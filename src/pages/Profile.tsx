@@ -123,7 +123,7 @@ function Profile() {
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (session) => {
         if (session && session.user) {
           setUser(session.user);
           fetchEvents(session.user.id);
@@ -138,9 +138,8 @@ function Profile() {
   }, []);
 
   const handleGoogleSync = async () => {
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
-    let accessToken = sessionData.session?.provider_token;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.provider_token;
 
     if (!accessToken) {
       const { error } = await supabase.auth.signInWithOAuth({
