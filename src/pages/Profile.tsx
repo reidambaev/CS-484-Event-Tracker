@@ -122,15 +122,9 @@ function Profile() {
       fetchRvsp(data.user ? data.user.id : null);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (session) => {
-        if (session && session.user) {
-          setUser(session.user);
-          fetchEvents(session.user.id);
-          fetchRvsp(session.user.id);
-        }
-      },
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      return;
+    });
 
     return () => {
       authListener.subscription.unsubscribe();
